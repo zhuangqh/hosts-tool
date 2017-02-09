@@ -12,6 +12,8 @@ COMMANDS
 \t\tadd a new hosts source
 \tbackup [path]
 \t\tbackup current hosts file
+\tlist
+\t\tlist current hosts sources
 \tremove [url]
 \t\tremove a hosts source
 \tupdate
@@ -30,6 +32,8 @@ def getCommand():
       addSource()
     elif cmd == 'backup':
       backupHosts()
+    elif cmd == 'list':
+      print '\n'.join(getSourceList())
     elif cmd == 'remove':
       removeSource()
     elif cmd == 'update':
