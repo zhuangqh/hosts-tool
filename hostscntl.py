@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 import requests
 import sys
+import shutil
 import os
 
-guide = '''
-update\tupdate hosts
-add\tadd a source
+guide = '''NAME
+\thosts-tool - The hosts file controller
+
+COMMANDS
+\tadd [url]
+\t\tadd a new hosts source
+\tbackup [path]
+\t\tbackup current hosts file
+\tremove [url]
+\t\tremove a hosts source
+\tupdate
+\t\tupdate hosts according to sources
 '''
 
 configPath = os.path.join(os.getenv("HOME"), '.hostscntl')
@@ -16,13 +26,16 @@ def getCommand():
     print guide
   else:
     cmd = sys.argv[1]
-    if cmd == 'update':
-      updateHosts()
-    elif cmd == 'add':
+    if cmd == 'add':
       addSource()
+    elif cmd == 'backup':
+      backupHosts()
+    elif cmd == 'remove':
+      removeSource()
+    elif cmd == 'update':
+      updateHosts()
     else:
-      print 'undefined command'
-      print guide
+      print 'unknown command: %s' % cmd
 
 def updateHosts():
   try:
@@ -68,4 +81,29 @@ def addSource():
   except Exception as err:
     print 'cannot open config file:\n%s' % err
 
-getCommand()
+def backupHosts():
+  if len(sys.argv) < 3:
+    print 'invalid command'
+    return
+
+  backupPath = sys.argv[2]
+
+  shutil.copy(hostsPath, backupPath)
+
+def removeSource():
+  if len(sys.argv) < 3:
+    print 'invalid command'
+    return
+
+  sourceToDel = sys.argv[2] + '\n'
+
+  with open(configPath, 'r+') as configFile:
+    sources = configFile.readlines()
+    configFile.seek(0)
+    for l in sources:
+      if l != sourceToDel:
+          configFile.write(l)
+    configFile.truncate()
+
+if __name__ == '__main__':
+  getCommand()
