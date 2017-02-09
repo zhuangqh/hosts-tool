@@ -37,13 +37,27 @@ def getCommand():
     else:
       print 'unknown command: %s' % cmd
 
-def updateHosts():
+
+def getSourceList():
+  if not os.path.isfile(configPath):
+    print 'warning: config file dont exists'
+    return []
+  
   try:
     with open(configPath, 'r') as configFile:
       sources = configFile.read().splitlines()
-      print sources
-  except OSError as err:
-    print 'no config file %s' % err
+      return sources
+  except Exception as err:
+    print 'unknown error\n %s' % err
+    return []
+
+
+def updateHosts():
+  sources = getSourceList()
+
+  # dont overwrite origin hosts if sources is empty
+  if len(sources) == 0:
+    return
 
   hostsBuffer = ''
 
@@ -68,18 +82,14 @@ def addSource():
 
   source = sys.argv[2]
 
-  try:
-    with open(configPath, 'rw') as configFile:
-      sources = configFile.read().splitlines()
-      if source in sources:
-        print 'source exists'
-        return
+  sources = getSourceList()
 
+  if source not in sources:
     with open(configPath, 'a') as configFile:
       configFile.write(source + '\n')
       print 'successfully add source %s' % source
-  except Exception as err:
-    print 'cannot open config file:\n%s' % err
+  else:
+    print 'source `%s` exists' % source
 
 def backupHosts():
   if len(sys.argv) < 3:
@@ -100,10 +110,18 @@ def removeSource():
   with open(configPath, 'r+') as configFile:
     sources = configFile.readlines()
     configFile.seek(0)
+    hasRemove = False
     for l in sources:
       if l != sourceToDel:
-          configFile.write(l)
+        configFile.write(l)
+      else:
+        hasRemove = True
     configFile.truncate()
+
+    if hasRemove:
+      print 'remove `%s` successfully' % sys.argv[2]
+    else:
+      print 'source `%s` dont exists' % sys.argv[2]
 
 if __name__ == '__main__':
   getCommand()
